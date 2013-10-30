@@ -80,3 +80,7 @@ obj/Release/UE02.csproj.GenerateResource.Cache
 obj/Release/UE02.exe
 
 obj/Release/UE02.pdb
+
+obj/Release/DesignTimeResolveAssemblyReferences.cache
+
+obj/Release/UE02.csprojResolveAssemblyReference.cache

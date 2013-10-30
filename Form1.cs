@@ -13,8 +13,18 @@ namespace UE02
 {
     public partial class Form1 : Form
     {
-        private int previousX, previousY, currentX, currentY;
-        GeometricObject temp;
+        private int previousX, previousY, tempX, tempY;
+        Bitmap temp;
+
+        // default values if user hasn't picked a color yet
+        Color activeColor = Color.Black;
+        Color backColor = Color.White;
+
+        static int saveLength = 10; // how many steps will be saved
+        Bitmap[] steps = new Bitmap[saveLength];
+        int stepCounter = -1;
+        int[] xPos = new int[saveLength];
+        int[] yPos = new int[saveLength];
 
         public Form1()
         {
@@ -42,8 +52,21 @@ namespace UE02
         private void button1_Click(object sender, EventArgs e)
         {
             DialogResult result = colorDialog1.ShowDialog();
-            if (result == DialogResult.OK)  
+            if (result == DialogResult.OK)
+            {
                 button1.BackColor = colorDialog1.Color; // set button background to selected color
+                activeColor = colorDialog1.Color;
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            DialogResult result = colorDialog2.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                this.BackColor = colorDialog2.Color;
+                backColor = colorDialog2.Color;
+            }
         }
 
         private void Form1_MouseDown(object sender, MouseEventArgs e)
@@ -52,94 +75,16 @@ namespace UE02
             previousY = e.Y;
         }
 
-        private void button2_Click(object sender, EventArgs e)
-        {
-            DialogResult result = colorDialog2.ShowDialog();
-            this.BackColor = colorDialog2.Color;
-        }
-        
         private void Form1_MouseMove(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
             {
-                currentX = e.X;
-                currentY = e.Y;
+                Graphics gr = CreateGraphics();
+                gr.Clear(backColor);
+                //Invalidate(new Rectangle(previousX, previousY, tempX, tempY));
 
-                String selectedItem = comboBox1.Text;
-                if (selectedItem == "Stift")
-                {
-                    this.Text = "Stift";
-                    temp = new Line();
-                    temp.setColor(colorDialog1.Color);
-                    temp.setThickness(trackBar1.Value);
-                    int startX, endX, startY, endY;
-                    startX = Math.Min(previousX, currentX);
-                    startY = Math.Min(previousY, currentY);
-                    endX = Math.Max(previousX, currentX);
-                    endY = Math.Max(previousY, currentY);
-
-                    temp.Location = new System.Drawing.Point(startX, startY);
-                    temp.Size = new System.Drawing.Size(endX - startX, endY - startY);
-
-                    this.Controls.Add(temp);
-                }
-                else if (selectedItem == "Radierer")
-                {
-                    this.Text = "Radierer";
-                    temp = new Dot();
-                    temp.setColor(Color.White);
-                    temp.setThickness(trackBar1.Value);
-
-                    temp.Location = new System.Drawing.Point(e.X, e.Y);
-                    temp.Size = new System.Drawing.Size(temp.getThickness(), temp.getThickness());
-
-                    this.Controls.Add(temp);
-                }
-            }
-            
-
-            /*
-            //if (e.Button == MouseButtons.Left)
-            //if(true)
-            if (e.Button == MouseButtons.Left)
-            {
-                currentX = e.X;
-                currentY = e.Y;
-
-                this.Text = currentX + " " + currentY;
-                String selectedItem = comboBox1.Text;
-                this.Controls.Remove(temp);
-
-                switch (selectedItem)
-                {
-                    case "Stift":
-                        temp = new Dot();
-                        temp.Location = new System.Drawing.Point(e.X, e.Y);
-                        temp.Size = new System.Drawing.Size(1, 1);
-                        break;
-                    case "Radierer":
-                        temp = new Radierer();
-                        break;
-                    case "Linie":
-                        temp = new Line();
-                        break;
-                    case "Ellipse":
-                        temp = new Circle();
-                        break;
-                    case "Rechteck":
-                        temp = new Rectangle();
-                        break;
-                    case "Dreieck":
-                        temp = new Triangle();
-                        break;
-                    default:
-                        temp = new Dot();
-                        GeometricObject myDot = new Dot();
-                        myDot.Location = new System.Drawing.Point(currentX, currentY);
-                        myDot.Size = new System.Drawing.Size(myDot.getThickness(), myDot.getThickness());
-                        this.Controls.Add(myDot);
-                        break;
-                }
+                tempX = e.X;
+                tempY = e.Y;
                 // get checkbox as string, where last char is 0/1
                 String fillValue = autofill.ToString();
                 // get last char and save to char
@@ -147,60 +92,76 @@ namespace UE02
                 // 'convert' to bool
                 bool fill = (last == '1');
 
-                temp.setAutofill(fill);
-                temp.setThickness(trackBar1.Value);
+                int startX = Math.Min(tempX, previousX);
+                int startY = Math.Min(tempY, previousY);
+                int endX = Math.Max(tempX, previousX);
+                int endY = Math.Max(tempY, previousY);
 
-                int startX, endX, startY, endY;
-                startX = Math.Min(previousX, currentX);
-                startY = Math.Min(previousY, currentY);
-                endX = Math.Max(previousX, currentX);
-                endY = Math.Max(previousY, currentY);
+                temp = new Bitmap(Math.Max(1, endX - startX), Math.Max(1, endY - startY));
+                Graphics g = Graphics.FromImage(temp);
+                Brush b = new SolidBrush(activeColor);
+                int thickness = trackBar1.Value;
+                Pen p = new Pen(activeColor, thickness);
 
-                temp.Location = new System.Drawing.Point(startX, startY);
-                temp.Size = new System.Drawing.Size(endX - startX, endY - startY);
-                this.Controls.Add(temp);
-            }*/
+                int width = endX - startX - Math.Max(thickness, 1);
+                int height = endY - startY - Math.Max(thickness, 1);
+                int start = thickness / 2;
+
+                String selectedItem = comboBox1.Text;
+                switch (selectedItem)
+                {
+                    case "Stift":
+                        g.DrawLine(p, new Point(start, start), new Point(width, height));
+                        previousX = tempX;
+                        previousY = tempY;
+                        break;
+                    case "Radierer":
+                        g.DrawLine(new Pen(backColor, thickness), new Point(start, start), new Point(width, height));
+                        previousX = tempX;
+                        previousY = tempY;
+                        break;
+                    case "Linie":
+                        g.DrawLine(p, new Point(start, start), new Point(width, height));
+                        break;
+                    case "Ellipse":
+                        if (fill)
+                            g.FillEllipse(b, start, start, width, height);
+                        else
+                            g.DrawEllipse(p, start, start, width, height);
+                        break;
+                    case "Rechteck":
+                        if (fill)
+                            g.FillRectangle(b, start, start, width, height);
+                        else
+                            g.DrawRectangle(p, start, start, width, height);
+                        break;
+                    case "Dreieck":
+                        Point point1 = new Point(start, height); // lower left
+                        Point point2 = new Point(width, height); // lower right
+                        Point point3 = new Point(width / 2, start); // top, middle
+                        Point[] trianglePoints = { point1, point2, point3 };
+                        if (fill)
+                            g.FillPolygon(b, trianglePoints);
+                        else
+                            g.DrawPolygon(p, trianglePoints);
+                        break;
+                    default:
+                        //g.FillRectangle(b, start, start, width, height);
+                        break;
+                }
+
+                gr.DrawImage(temp, startX, startY);
+            }
         }
 
         private void Form1_MouseUp(object sender, MouseEventArgs e)
         {
-            currentX = e.X;
-            currentY = e.Y;
-            String selectedItem = comboBox1.Text;
-            //this.Text = selectedItem;
-            GeometricObject myObj;
-            switch(selectedItem)
-            {
-                case "Stift":
-                    myObj = new Dot();
-                    break;
-                case "Radierer":
-                    myObj = new Dot();
-                    break;
-                case "Linie":
-                    myObj = new Line();
-                    break;
-                case "Ellipse":
-                    myObj = new Circle();
-                    break;
-                case "Rechteck":
-                    myObj = new Rectangle();
-                    break;         
-                case "Dreieck":
-                    myObj = new Triangle();
-                    break;
-                default:
-                    myObj = new Dot();
-                    break;
-            }
+            Graphics gr = CreateGraphics();
+            gr.Clear(backColor);
+            //Invalidate(new Rectangle(previousX, previousY, tempX, tempY));
 
-
-            // get color and set it accordingly 
-            if (selectedItem == "Radierer")
-                myObj.setColor(Color.White);
-            else
-                myObj.setColor(colorDialog1.Color);
-
+            tempX = e.X;
+            tempY = e.Y;
             // get checkbox as string, where last char is 0/1
             String fillValue = autofill.ToString();
             // get last char and save to char
@@ -208,20 +169,98 @@ namespace UE02
             // 'convert' to bool
             bool fill = (last == '1');
 
-            myObj.setAutofill(fill);
-            myObj.setThickness(trackBar1.Value);
+            int startX = Math.Min(tempX, previousX);
+            int startY = Math.Min(tempY, previousY);
+            int endX = Math.Max(tempX, previousX);
+            int endY = Math.Max(tempY, previousY);
 
-            int startX, endX, startY, endY;
-            startX = Math.Min(previousX, currentX);
-            startY = Math.Min(previousY, currentY);
-            endX = Math.Max(previousX, currentX);
-            endY = Math.Max(previousY, currentY);
+            temp = new Bitmap(Math.Max(1, endX - startX), Math.Max(1, endY - startY));
+            Graphics g = Graphics.FromImage(temp);
+            Brush b = new SolidBrush(activeColor);
+            int thickness = trackBar1.Value;
+            Pen p = new Pen(activeColor, thickness);
 
-            myObj.Location = new System.Drawing.Point(startX, startY);
-            myObj.Size = new System.Drawing.Size(endX - startX, endY - startY);
-            //myObj.BackColor = Color.Transparent;
-            this.Controls.Add(myObj);
-            myObj.BringToFront();
+            int width = endX - startX - Math.Max(thickness, 1);
+            int height = endY - startY - Math.Max(thickness, 1);
+            int start = thickness / 2;
+
+            String selectedItem = comboBox1.Text;
+            switch (selectedItem)
+            {
+                case "Stift":
+                    g.DrawLine(p, new Point(start, start), new Point(width, height));
+                    previousX = tempX;
+                    previousY = tempY;
+                    break;
+                case "Radierer":
+                    g.DrawLine(new Pen(backColor, thickness), new Point(start, start), new Point(width, height));
+                    previousX = tempX;
+                    previousY = tempY;
+                    break;
+                case "Linie":
+                    g.DrawLine(p, new Point(start, start), new Point(width, height));
+                    break;
+                case "Ellipse":
+                    if (fill)
+                        g.FillEllipse(b, start, start, width, height);
+                    else
+                        g.DrawEllipse(p, start, start, width, height);
+                    break;
+                case "Rechteck":
+                    if (fill)
+                        g.FillRectangle(b, start, start, width, height);
+                    else
+                        g.DrawRectangle(p, start, start, width, height);
+                    break;
+                case "Dreieck":
+                    Point point1 = new Point(start, height); // lower left
+                    Point point2 = new Point(width, height); // lower right
+                    Point point3 = new Point(width / 2, start); // top, middle
+                    Point[] trianglePoints = { point1, point2, point3 };
+                    if (fill)
+                        g.FillPolygon(b, trianglePoints);
+                    else
+                        g.DrawPolygon(p, trianglePoints);
+                    break;
+                default:
+                    //g.FillRectangle(b, start, start, width, height);
+                    break;
+            }
+
+            gr.DrawImage(temp, startX, startY);
+
+            // save form etc
+
+            if (stepCounter == saveLength-1)
+            {
+                for (int i = 0; i < saveLength-1; i++)
+                {
+                    steps[i] = steps[i + 1];
+                    xPos[i] = xPos[i + 1];
+                    yPos[i] = yPos[i + 1];
+                }
+                stepCounter--;
+            }
+
+            stepCounter++;
+            steps[stepCounter] = temp;
+            xPos[stepCounter] = startX;
+            yPos[stepCounter] = startY;
+            
+            
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            Graphics gr = CreateGraphics();
+            gr.Clear(backColor);
+            stepCounter = Math.Max(0, stepCounter - 1);
+            gr.DrawImage(steps[stepCounter], xPos[stepCounter], yPos[stepCounter]);
         }
     }
 }

@@ -8,9 +8,9 @@ using System.Drawing;
 
 namespace UE02
 {
-    class Rectangle : GeometricObject
+    class Rectangle2 : GeometricObject
     {
-        public Rectangle()
+        public Rectangle2()
         {
         }
 
