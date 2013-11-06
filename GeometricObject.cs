@@ -14,6 +14,29 @@ namespace UE02
         private Color shapeColor = Color.FromArgb(0, 0, 0);
         private int thickness = 1;
 
+        public Point start
+        {
+            get
+            {
+                return start;
+            }
+            set
+            {
+                start = value;
+            }
+        }
+        public Point end
+        {
+            get
+            {
+                return end;
+            }
+            set
+            {
+                end = value;
+            }
+        }
+
         public GeometricObject()
         {
             MouseClick += myMouseEventHandler;
