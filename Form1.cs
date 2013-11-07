@@ -48,7 +48,7 @@ namespace UE02
 
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void changeElementColorButton(object sender, EventArgs e)
         {
             DialogResult result = colorDialog1.ShowDialog();
             if (result == DialogResult.OK)
@@ -141,7 +141,6 @@ namespace UE02
                             g.DrawEllipse(p, offset, offset, formWidth, formHeight);
                         break;
                     case "Rechteck":
-                        new Rectangle(startX, startY, endX, endY, fill);
                         if (fill)
                             g.FillRectangle(b, offset, offset, formWidth, formHeight);
                         else
@@ -166,7 +165,7 @@ namespace UE02
                 
                 if (selectedItem == "Stift" || selectedItem == "Radierer")
                 {
-                    savedDrawings.Add(new Drawing(temporaryBitmap, startX, startY));
+                    savedDrawings.Add(new Drawing(temporaryBitmap, startX, startY, true));
                 }
             }
         }
@@ -211,19 +210,21 @@ namespace UE02
             int formHeight = bitmapHeight - Math.Max(1, thickness);
 
             int offset = thickness / 2;
-
+            bool line = false;
             String selectedItem = comboBox1.Text;
             switch (selectedItem)
             {
                 case "Stift":
                     g.DrawLine(p, new Point((previous.X - startX), (previous.Y - startY)), new Point(temporary.X - startX, temporary.Y - startY));
                     previous.X = temporary.X;
-                        previous.Y = temporary.Y;
+                    previous.Y = temporary.Y;
+                    line = false;
                     break;
                 case "Radierer":
                     g.DrawLine(new Pen(backColor, thickness), new Point((previous.X - startX), (previous.Y - startY)), new Point(temporary.X - startX, temporary.Y - startY));
                     previous.X = temporary.X;
                     previous.Y = temporary.Y;
+                    line = false;
                     break;
                 case "Linie":
                     g.DrawLine(p, new Point((previous.X - startX), (previous.Y - startY)), new Point(temporary.X - startX, temporary.Y - startY));
@@ -235,7 +236,6 @@ namespace UE02
                         g.DrawEllipse(p, offset, offset, formWidth, formHeight);
                     break;
                 case "Rechteck":
-                    new Rectangle(startX, startY, endX, endY, fill);
                     if (fill)
                         g.FillRectangle(b, offset, offset, formWidth, formHeight);
                     else
@@ -259,7 +259,7 @@ namespace UE02
 
             gr.DrawImage(temporaryBitmap, startX, startY);
 
-            savedDrawings.Add(new Drawing(temporaryBitmap, startX, startY));
+            savedDrawings.Add(new Drawing(temporaryBitmap, startX, startY, line));
             
             
         }
@@ -274,7 +274,9 @@ namespace UE02
         {
             if (savedDrawings.Count >= 1)
             {
-                savedDrawings.RemoveAt(savedDrawings.Count - 1);
+                savedDrawings.Remove(savedDrawings.Last());
+                if (savedDrawings.Count >= 1 && savedDrawings.ElementAt(savedDrawings.Count - 1).line)
+                    backButton(sender, e);
                 drawForms();
             }
         }
@@ -293,8 +295,6 @@ namespace UE02
                     gr.DrawImage(temp.form, temp.xPos, temp.yPos);
                 }
             }
-
-
         }
 
         // clear button

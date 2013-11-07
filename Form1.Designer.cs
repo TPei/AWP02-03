@@ -88,7 +88,7 @@
             this.button1.Size = new System.Drawing.Size(20, 20);
             this.button1.TabIndex = 3;
             this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.button1.Click += new System.EventHandler(this.changeElementColorButton);
             // 
             // button2
             // 

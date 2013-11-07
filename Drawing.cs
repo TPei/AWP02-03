@@ -10,13 +10,50 @@ namespace UE02
     class Drawing
     {
         public Bitmap form;
-        public int xPos, yPos;
+        /*{
+            get
+            {
+                return form;
+            }
+            set
+            {
+                form = value;
+            }
+        }*/
 
-        public Drawing(Bitmap _form, int _xPos, int _yPos)
+        public int xPos;
+        /*{
+            get
+            {
+                return xPos;
+            }
+            set
+            {
+                xPos = value;
+            }
+        }*/
+
+        public int yPos;
+       /* {
+            get
+            {
+                return yPos;
+            }
+            set
+            {
+                yPos = value;
+            }
+        }*/
+
+        public bool line;
+
+
+        public Drawing(Bitmap _form, int _xPos, int _yPos, bool _line)
         {
             this.form = _form;
             this.xPos = _xPos;
             this.yPos = _yPos;
+            this.line = _line;
         }
     }
 }
